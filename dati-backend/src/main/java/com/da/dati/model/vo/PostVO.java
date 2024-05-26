@@ -2,17 +2,18 @@ package com.da.dati.model.vo;
 
 import cn.hutool.json.JSONUtil;
 import com.da.dati.model.entity.Post;
+import lombok.Data;
+import org.springframework.beans.BeanUtils;
+
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
-import lombok.Data;
-import org.springframework.beans.BeanUtils;
 
 /**
  * 帖子视图
  *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
+ * @author <a href="https://github.com/lida">程序员鱼皮</a>
+ * @from <a href="https://da.icu">编程导航知识星球</a>
  */
 @Data
 public class PostVO implements Serializable {

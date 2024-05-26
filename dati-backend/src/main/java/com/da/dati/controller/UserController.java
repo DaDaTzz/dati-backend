@@ -30,8 +30,8 @@ import static com.da.dati.service.impl.UserServiceImpl.SALT;
 /**
  * 用户接口
  *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
+ * @author <a href="https://github.com/lida">程序员鱼皮</a>
+ * @from <a href="https://da.icu">编程导航知识星球</a>
  */
 @RestController
 @RequestMapping("/user")
