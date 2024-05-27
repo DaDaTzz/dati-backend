@@ -1,4 +1,5 @@
 import axios from "axios";
+import { Message } from "@arco-design/web-vue";
 
 const myAxios = axios.create({
   baseURL: 'http://localhost:8101',
@@ -24,6 +25,7 @@ myAxios.interceptors.response.use(function (response) {
   if(data.code === 40100){
     // 不是获取用户信息的请求，并且用户目前不是已经在登录页面，则跳转到登录页
     if(!response.request.responseURL.includes("user/get/login") && window.location.pathname.includes("/user/login")){
+      Message.warning("请先登录！")
       window.location.href = `/user/login?redirect=${window.location.href}`
     }
   }

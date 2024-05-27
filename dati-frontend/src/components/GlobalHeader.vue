@@ -26,8 +26,9 @@
 <script setup lang="ts">
 import { routes } from "@/router/routes";
 import {  useRouter } from "vue-router";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useLoginUserStore } from "@/store/userStore";
+import checkAccess from "@/access/checkAccess";
 
 const loginUserStore = useLoginUserStore()
 
@@ -41,11 +42,17 @@ router.afterEach((to) => {
 })
 
 // 展示在菜单栏的路由数组
-const visibleRoutes = routes.filter((route) => {
-  if (route.meta?.hideInMenu){
-    return false;
-  }
-  return true;
+const visibleRoutes = computed(() =>{
+  return routes.filter((item) => {
+    if (item.meta?.hideInMenu){
+      return false;
+    }
+    // 根据权限过滤菜单栏
+    if(!checkAccess(loginUserStore.loginUser, item.meta?.access as string)){
+      return false;
+    }
+    return true;
+  })
 })
 
 

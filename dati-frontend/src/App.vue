@@ -14,17 +14,19 @@
 <script setup lang="ts">
 import BasicLayout from "@/layouts/BasicLayout.vue";
 import { useRoute } from "vue-router";
-import { getLoginUserUsingGet } from "@/api/userController";
-import { useLoginUserStore } from "@/store/userStore";
+import { onMounted } from "vue";
 
 const route = useRoute();
 
-const loginUserStore = useLoginUserStore();
-loginUserStore.fetchLoginUser();
+/**
+ * 全局初始化函数
+ */
+const doInit = () =>{
+  console.log("欢迎关注程序员 Da 的日常！")
+}
 
-
-
-getLoginUserUsingGet().then((response) => {
-  console.log(response)
+onMounted(() => {
+  doInit();
 })
+
 </script>
