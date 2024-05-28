@@ -30,8 +30,11 @@ import GlobalHeader from "@/components/GlobalHeader.vue";
 }
 
 .content {
+  max-width: 1200px;
+  width: 100%;
+  box-sizing: border-box;
   background: linear-gradient(to right, #fefefe, #fff);
-  margin-bottom: 28px;
+  margin: 0 auto 28px;
   padding: 20px;
 }
 
@@ -44,11 +47,5 @@ import GlobalHeader from "@/components/GlobalHeader.vue";
     text-decoration: none;
   }
 
-  .menu-demo {
-    box-sizing: border-box;
-    width: 100%;
-    padding: 40px;
-    background-color: var(--color-neutral-2);
-  }
 }
 </style>

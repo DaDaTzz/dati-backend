@@ -1,18 +1,26 @@
 <template>
   <a-form :model="formSearchParams" :style="{ marginBottom: '20px'}" @submit="doSearch"  label-align="left" layout="inline" auto-label-width >
-    <a-form-item field="userAccount" label="用户名">
+    <a-form-item field="questionContent" label="题目内容">
       <a-input
-        v-model="formSearchParams.userName"
-        placeholder="请输入用户名..."
+        v-model="formSearchParams.questionContent"
+        placeholder="请输入题目内容..."
         allow-clear
       />
     </a-form-item>
-    <a-form-item field="userProfile" label="用户简介">
+    <a-form-item field="QuestionProfile" label="应用id">
       <a-input
-        v-model="formSearchParams.userProfile"
-        placeholder="请输入用户简介..."
+        v-model="formSearchParams.appId"
+        placeholder="请输入题目id..."
         allow-clear
       />
+    </a-form-item>
+      <a-form-item field="QuestionProfile" label="用户id">
+      <a-input
+        v-model="formSearchParams.userId"
+        placeholder="请输入用户id..."
+        allow-clear
+      />
+
     </a-form-item>
     <a-form-item>
         <a-button type="primary" html-type="submit" style="width: 100px">搜索</a-button>
@@ -27,8 +35,10 @@
   }"
   @page-change="onPageChange"
   >
-    <template #userAvatar="{ record }">
-      <a-image width="64" :src="record.userAvatar"/>
+    <template #questionContent="{ record }">
+      <div v-for="question in JSON.parse(record.questionContent)" :key="record.id">
+        {{ question }}
+      </div>
     </template>
     <template #updateTime="{ record }">
       {{ dayjs(record.updateTime).format("YYYY-MM-DD HH:mm:ss") }}
@@ -37,34 +47,37 @@
       {{ dayjs(record.createTime).format("YYYY-MM-DD HH:mm:ss") }}
     </template>
     <template #optional="{ record }">
-      <a-button status="danger" @click="doDelete(record)">删除</a-button>
+      <a-space>
+        <a-button status="danger" @click="doDelete(record)">删除</a-button>
+      </a-space>
     </template>
   </a-table>
 </template>
 
 <script setup lang="ts">
 import { ref, watchEffect } from "vue";
-import { deleteUserUsingPost, listUserByPageUsingPost } from "@/api/userController";
 import { Message } from "@arco-design/web-vue";
 import dayjs from "dayjs";
+import { deleteQuestionUsingPost, listQuestionByPageUsingPost } from "@/api/questionController";
 
-// 初始化搜索条件
+
+// 初始化搜索条件`
 const initSearchParams = {
   current: 1,
   pageSize: 10,
 }
 
-const searchParams = ref<API.UserQueryRequest>({
+const searchParams = ref<API.QuestionQueryRequest>({
   ...initSearchParams,
 })
 
-const formSearchParams =  ref<API.UserQueryRequest>({})
+const formSearchParams =  ref<API.QuestionQueryRequest>({})
 
-const dataList = ref<API.User[]>([])
+const dataList = ref<API.Question[]>([])
 const total = ref<number>(0)
 
 const loadData = async () =>{
-  const res = await listUserByPageUsingPost(searchParams.value)
+  const res = await listQuestionByPageUsingPost(searchParams.value)
   if(res.data.code === 0){
     dataList.value = res.data.data?.records || [];
     total.value = res.data.data?.total || 0;
@@ -74,11 +87,11 @@ const loadData = async () =>{
 }
 
 /**
- * 删除用户
+ * 删除题目
  * @param record
  */
-const doDelete = async (record:API.User) =>{
-  const res = await deleteUserUsingPost({
+const doDelete = async (record:API.Question) =>{
+  const res = await deleteQuestionUsingPost({
     id:record.id,
   })
   if(res.data.code === 0){
@@ -120,35 +133,31 @@ watchEffect(() =>{
 // 列数据配置
 const columns = [
   {
-    title: '用户账号',
-    dataIndex: 'userAccount',
+    title: "id",
+    dataIndex: "id"
   },
   {
-    title: '用户昵称',
-    dataIndex: 'userName',
+    title: "题目内容（json格式）",
+    dataIndex: "questionContent",
+    slotName: "questionContent",
   },
   {
-    title: '用户头像',
-    dataIndex: 'userAvatar',
-    slotName: 'userAvatar',
+    title: "应用 id",
+    dataIndex: "appId"
   },
   {
-    title: '用户简介',
-    dataIndex: 'userProfile',
+    title: "创建用户 id",
+    dataIndex: "userId"
   },
   {
-    title: '用户角色',
-    dataIndex: 'userRole',
+    title: "创建时间",
+    dataIndex: "createTime",
+    slotName: 'createTime',
   },
   {
-    title: '创建时间',
-    dataIndex: 'createTime',
-    slotName:'createTime',
-  },
-  {
-    title: '更新时间',
-    dataIndex: 'updateTime',
-    slotName:'updateTime',
+    title: "更新时间",
+    dataIndex: "updateTime",
+    slotName: 'updateTime',
   },
   {
     title: '操作',
@@ -160,7 +169,7 @@ const columns = [
 
 
 <style scoped>
-#adminUserPage {
+#adminQuestionPage {
 
 }
 

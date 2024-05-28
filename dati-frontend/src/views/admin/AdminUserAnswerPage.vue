@@ -1,16 +1,30 @@
 <template>
   <a-form :model="formSearchParams" :style="{ marginBottom: '20px'}" @submit="doSearch"  label-align="left" layout="inline" auto-label-width >
-    <a-form-item field="userAccount" label="用户名">
+    <a-form-item field="UserAnswerAccount" label="结果名称">
       <a-input
-        v-model="formSearchParams.userName"
-        placeholder="请输入用户名..."
+        v-model="formSearchParams.resultName"
+        placeholder="请输入结果描述..."
         allow-clear
       />
     </a-form-item>
-    <a-form-item field="userProfile" label="用户简介">
+    <a-form-item field="UserAnswerProfile" label="结果描述">
       <a-input
-        v-model="formSearchParams.userProfile"
-        placeholder="请输入用户简介..."
+        v-model="formSearchParams.resultDesc"
+        placeholder="请输入结果描述..."
+        allow-clear
+      />
+    </a-form-item>
+    <a-form-item field="ScoringResultProfile" label="应用id">
+      <a-input
+        v-model="formSearchParams.appId"
+        placeholder="请输入应用id..."
+        allow-clear
+      />
+    </a-form-item>
+    <a-form-item field="ScoringResultProfile" label="用户id">
+      <a-input
+        v-model="formSearchParams.userId"
+        placeholder="请输入用户id..."
         allow-clear
       />
     </a-form-item>
@@ -27,8 +41,14 @@
   }"
   @page-change="onPageChange"
   >
-    <template #userAvatar="{ record }">
-      <a-image width="64" :src="record.userAvatar"/>
+    <template #resultPicture="{ record }">
+      <a-image width="64" :src="record.resultPicture"/>
+    </template>
+    <template #appType="{ record }">
+      {{ APP_TYPE_MAP[record.appType] }}
+    </template>
+    <template #scoringStrategy="{ record }">
+      {{ APP_SCORING_STRATEGY_MAP[record.appType] }}
     </template>
     <template #updateTime="{ record }">
       {{ dayjs(record.updateTime).format("YYYY-MM-DD HH:mm:ss") }}
@@ -44,9 +64,10 @@
 
 <script setup lang="ts">
 import { ref, watchEffect } from "vue";
-import { deleteUserUsingPost, listUserByPageUsingPost } from "@/api/userController";
+import { deleteUserAnswerUsingPost, listUserAnswerByPageUsingPost } from "@/api/userAnswerController";
 import { Message } from "@arco-design/web-vue";
 import dayjs from "dayjs";
+import { APP_SCORING_STRATEGY_MAP, APP_TYPE_MAP } from "@/constant/app";
 
 // 初始化搜索条件
 const initSearchParams = {
@@ -54,17 +75,18 @@ const initSearchParams = {
   pageSize: 10,
 }
 
-const searchParams = ref<API.UserQueryRequest>({
+const searchParams = ref<API.UserAnswerQueryRequest>({
   ...initSearchParams,
 })
 
-const formSearchParams =  ref<API.UserQueryRequest>({})
+const formSearchParams =  ref<API.UserAnswerQueryRequest>({})
 
-const dataList = ref<API.User[]>([])
+const dataList = ref<API.UserAnswer[]>([])
 const total = ref<number>(0)
 
 const loadData = async () =>{
-  const res = await listUserByPageUsingPost(searchParams.value)
+  const res = await listUserAnswerByPageUsingPost(searchParams.value)
+  console.log(res)
   if(res.data.code === 0){
     dataList.value = res.data.data?.records || [];
     total.value = res.data.data?.total || 0;
@@ -74,11 +96,11 @@ const loadData = async () =>{
 }
 
 /**
- * 删除用户
+ * 删除用户回答
  * @param record
  */
-const doDelete = async (record:API.User) =>{
-  const res = await deleteUserUsingPost({
+const doDelete = async (record:API.UserAnswer) =>{
+  const res = await deleteUserAnswerUsingPost({
     id:record.id,
   })
   if(res.data.code === 0){
@@ -120,25 +142,51 @@ watchEffect(() =>{
 // 列数据配置
 const columns = [
   {
-    title: '用户账号',
-    dataIndex: 'userAccount',
+    title: 'ID',
+    dataIndex: 'id',
   },
   {
-    title: '用户昵称',
-    dataIndex: 'userName',
+    title: '应用 ID',
+    dataIndex: 'appId',
   },
   {
-    title: '用户头像',
-    dataIndex: 'userAvatar',
-    slotName: 'userAvatar',
+    title: '应用类型（0-得分类，1-角色测评类）',
+    dataIndex: 'appType',
+    slotName:'appType',
   },
   {
-    title: '用户简介',
-    dataIndex: 'userProfile',
+    title: '评分策略（0-自定义，1-AI）',
+    dataIndex: 'scoringStrategy',
+    slotName:'scoringStrategy',
   },
   {
-    title: '用户角色',
-    dataIndex: 'userRole',
+    title: '用户答案（JSON 数组）',
+    dataIndex: 'choices',
+  },
+  {
+    title: '评分结果 id',
+    dataIndex: 'resultId',
+  },
+  {
+    title: '结果名称，如物流师',
+    dataIndex: 'resultName',
+  },
+  {
+    title: '结果描述',
+    dataIndex: 'resultDesc',
+  },
+  {
+    title: '结果图标',
+    dataIndex: 'resultPicture',
+    slotName:'resultPicture',
+  },
+  {
+    title: '得分',
+    dataIndex: 'resultScore',
+  },
+  {
+    title: '用户 id',
+    dataIndex: 'userId',
   },
   {
     title: '创建时间',
@@ -150,17 +198,13 @@ const columns = [
     dataIndex: 'updateTime',
     slotName:'updateTime',
   },
-  {
-    title: '操作',
-    dataIndex: 'optional',
-    slotName: 'optional',
-  },
 ];
+
 </script>
 
 
 <style scoped>
-#adminUserPage {
+#adminUserAnswerPage {
 
 }
 
