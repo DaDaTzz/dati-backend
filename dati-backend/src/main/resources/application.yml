@@ -77,3 +77,8 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - com.da.dati.controller
+
+
+# 智谱AI 配置
+ai:
+  apiKey: "9edc909a796d79b4a7ecdba15851172c.oecJ8a8adr2bMeFR"

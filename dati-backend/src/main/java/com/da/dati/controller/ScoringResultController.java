@@ -31,7 +31,7 @@ import java.util.List;
  * 评分结果接口
  *
  
- * @from <a href="https://www.code-nav.cn">编程导航学习圈</a>
+ * @from 
  */
 @RestController
 @RequestMapping("/scoringResult")

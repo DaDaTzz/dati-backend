@@ -13,7 +13,7 @@ import java.util.List;
  * 编辑评分结果请求
  *
  
- * @from <a href="https://www.code-nav.cn">编程导航学习圈</a>
+ * @from 
  */
 @Data
 public class ScoringResultEditRequest implements Serializable {

@@ -5,8 +5,8 @@
         <a-col flex="auto" class="content-wrapper">
           <h2>{{ data.resultName }}</h2>
           <p>结果描述：{{ data.resultDesc }}</p>
-          <p>结果 id：{{ data.resultId }}</p>
-          <p>结果得分：{{ data.resultScore }}</p>
+          <p v-if="data.scoringStrategy === APP_SCORING_STRATEGY_ENUM.CUSTOM">结果 id：{{ data.resultId }}</p>
+          <p v-if="data.appType === APP_TYPE_ENUM.SCORE">结果得分：{{ data.resultScore }}</p>
           <p>我的答案：{{ data.choices }}</p>
           <p>应用 id：{{ data.appId }}</p>
           <p>应用类型：{{ APP_TYPE_MAP[data.appType] }}</p>
@@ -49,7 +49,7 @@ import { getUserAnswerVoByIdUsingGet } from "@/api/userAnswerController";
 import message from "@arco-design/web-vue/es/message";
 import { useRouter } from "vue-router";
 import { dayjs } from "@arco-design/web-vue/es/_utils/date";
-import { APP_SCORING_STRATEGY_MAP, APP_TYPE_MAP } from "../../constant/app";
+import { APP_SCORING_STRATEGY_ENUM, APP_SCORING_STRATEGY_MAP, APP_TYPE_ENUM, APP_TYPE_MAP } from "../../constant/app";
 
 interface Props {
   id: string;

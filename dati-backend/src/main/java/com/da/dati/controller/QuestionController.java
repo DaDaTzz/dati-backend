@@ -10,26 +10,31 @@ import com.da.dati.common.ResultUtils;
 import com.da.dati.constant.UserConstant;
 import com.da.dati.exception.BusinessException;
 import com.da.dati.exception.ThrowUtils;
+import com.da.dati.manager.AiManager;
 import com.da.dati.model.dto.question.*;
+import com.da.dati.model.entity.App;
 import com.da.dati.model.entity.Question;
 import com.da.dati.model.entity.User;
+import com.da.dati.model.enums.AppTypeEnum;
 import com.da.dati.model.vo.QuestionVO;
-import com.da.dati.scoring.ScoringStrategyExecutor;
+import com.da.dati.service.AppService;
 import com.da.dati.service.QuestionService;
 import com.da.dati.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
+import springfox.documentation.spring.web.json.Json;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 import java.util.List;
 
 /**
  * 题目接口
  *
- 
- * @from <a href="https://www.code-nav.cn">编程导航学习圈</a>
+ * @from
  */
 @RestController
 @RequestMapping("/question")
@@ -42,6 +47,11 @@ public class QuestionController {
     @Resource
     private UserService userService;
 
+    @Resource
+    private AiManager aiManager;
+
+    @Resource
+    private AppService appService;
 
 
     // region 增删改查
@@ -244,4 +254,63 @@ public class QuestionController {
     }
 
     // endregion
+
+
+    private static final String GENERATE_QUESTION_SYSTEM_MESSAGE = "你是一位严谨的出题专家，我会给你如下信息:\n" +
+            "```\n" +
+            "应用名称，\n" +
+            "【【【应用描述】】】\n" +
+            "应用类别，\n" +
+            "要生成的题目数，\n" +
+            "每个题目的选项数\n" +
+            "```\n" +
+            "\n" +
+            "请你根据上述信息，按照以下步骤来出题:\n" +
+            "1.要求:题目和选项尽可能地短，题目不要包含序号，每题的选项数以我提供的为主，题目不能重复\n" +
+            "2.严格按照下面的 json 格式输出题目和选项\n" +
+            "```\n" +
+            "[{\"options\":[{\"value\":\"选项内容\",\"key\":\"A\"},{\"value\":\"\",\"key\":\"B\"}],\"title\":\"题目标题\"}]\n" +
+            "```\n" +
+            "title 是题目，options 是选项，每个选项的 key 按照英文字母序(比如 A、B、C、D)以此类推，value 是选项内容\n" +
+            "3.检查题目是否包含序号，若包含序号则去除序号\n" +
+            "4.返回的题目列表格式必须为JSON 数组";
+
+
+    @PostMapping("/ai_generate")
+        public BaseResponse<List<QuestionContentDTO>> generatorQuestionByAi(@RequestBody AiGeneratorQuestionRequest aiGeneratorQuestionRequest, HttpServletRequest request) {
+        if (aiGeneratorQuestionRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 是否登录
+        User loginUser = userService.getLoginUser(request);
+        ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
+        // 参数校验
+        String appId = aiGeneratorQuestionRequest.getAppId();
+        int questionNumber = aiGeneratorQuestionRequest.getQuestionNumber();
+        int optionNumber = aiGeneratorQuestionRequest.getOptionNumber();
+        ThrowUtils.throwIf(StringUtils.isBlank(appId) || questionNumber <= 0 || questionNumber > 100 || optionNumber <= 0 || optionNumber > 20, ErrorCode.PARAMS_ERROR);
+        // 获取应用信息
+        App app = appService.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
+        // 封装 Prompt
+        String appName = app.getAppName();
+        String appDesc = app.getAppDesc();
+        Integer appType = app.getAppType();
+        StringBuilder userMessage = new StringBuilder();
+        userMessage.append(appName).append("\n");;
+        userMessage.append(appDesc).append("\n");;
+        userMessage.append(AppTypeEnum.getEnumByValue(appType).getText() + "类").append("\n");
+        userMessage.append(questionNumber).append("\n");
+        userMessage.append(optionNumber).append("\n");
+        // 调用 AI 接口
+        String result = aiManager.doAsyncRequest(GENERATE_QUESTION_SYSTEM_MESSAGE, userMessage.toString());
+        System.out.println(result);
+        int startIndex = result.indexOf("[");
+        int endIndex = result.lastIndexOf("]");
+        result = result.substring(startIndex, endIndex + 1);
+        List<QuestionContentDTO> questionContentDTOS = JSONUtil.toList(result, QuestionContentDTO.class);
+        return ResultUtils.success(questionContentDTOS);
+    }
+
+
 }

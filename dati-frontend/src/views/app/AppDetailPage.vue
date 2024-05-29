@@ -26,7 +26,7 @@
           创建时间：{{ dayjs(data.createTime).format("YYYY-MM-DD HH:mm:ss") }}
         </p>
         <a-space size="medium">
-          <a-button type="primary" :href="`/answer/do/${id}`"
+          <a-button v-if="data.reviewStatus === REVIEW_STATUS_ENUM.PASS" type="primary" :href="`/answer/do/${id}`"
           >开始答题</a-button
           >
           <a-button>分享应用</a-button>
@@ -53,7 +53,7 @@
 import { computed, onMounted, ref } from "vue";
 import { Message } from "@arco-design/web-vue";
 import { getAppVoByIdUsingGet } from "@/api/appController";
-import { APP_SCORING_STRATEGY_MAP, APP_TYPE_MAP } from "../../constant/app";
+import { APP_SCORING_STRATEGY_MAP, APP_TYPE_MAP, REVIEW_STATUS_ENUM, REVIEW_STATUS_MAP } from "../../constant/app";
 import dayjs from "dayjs";
 import { useLoginUserStore } from "@/store/userStore";
 

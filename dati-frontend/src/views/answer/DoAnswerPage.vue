@@ -33,7 +33,7 @@
             :disabled="!currentAnswer"
             @click="doSubmit"
           >
-            {{ submitting ? "评分中" : "查看结果" }}
+            {{ submitting ? "分析中" : "查看结果" }}
           </a-button>
           <a-button v-if="current > 1" circle @click="current -= 1">
             上一题

@@ -9,7 +9,7 @@ import java.util.Date;
  * 更新应用请求
  *
  
- * @from <a href="https://www.code-nav.cn">编程导航学习圈</a>
+ * @from 
  */
 @Data
 public class AppUpdateRequest implements Serializable {

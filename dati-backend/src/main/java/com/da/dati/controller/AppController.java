@@ -28,7 +28,7 @@ import java.util.Date;
  * 应用接口
  *
  
- * @from <a href="https://www.code-nav.cn">编程导航学习圈</a>
+ * @from 
  */
 @RestController
 @RequestMapping("/app")
@@ -230,7 +230,7 @@ public class AppController {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
         // 重置审核状态
-        app.setReviewerId(Long.valueOf(ReviewStatusEnum.REVIEWING.getValue()));
+        app.setReviewStatus(ReviewStatusEnum.REVIEWING.getValue());
         // 操作数据库
         boolean result = appService.updateById(app);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);

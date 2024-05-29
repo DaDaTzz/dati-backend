@@ -75,7 +75,7 @@ const handleSubmit = async () =>{
   if(props.id){
     res = await editAppUsingPost({
       id:props.id as any,
-      ...form.value
+      ...form.value,
     });
     // 如果是新增
   }else{
@@ -84,7 +84,7 @@ const handleSubmit = async () =>{
   if(res.data.code === 0) {
     Message.success("操作成功，即将跳转到应用详情");
     setTimeout(()=>{
-      router.push(`/app/detail/${props.id ?? res.data.data}`)
+      router.push(`/app/detail/${props.id || res.data.data}`)
     },3000)
   }else {
     Message.error("操作失败，" + res.data.message)

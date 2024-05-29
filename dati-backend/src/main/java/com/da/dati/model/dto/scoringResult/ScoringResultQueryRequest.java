@@ -10,7 +10,7 @@ import java.io.Serializable;
  * 查询评分结果请求
  *
  
- * @from <a href="https://www.code-nav.cn">编程导航学习圈</a>
+ * @from 
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
