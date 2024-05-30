@@ -22,7 +22,10 @@
           />
         </a-form-item>
         <a-form-item>
-          <a-button :loading="submitting" type="primary" html-type="submit" style="width: 120px">{{ submitting ? "题目生成中" : "一键生成" }}</a-button>
+          <a-space>
+            <a-button :loading="submitting" type="primary" html-type="submit" style="width: 120px">{{ submitting ? "题目生成中" : "一键生成" }}</a-button>
+            <a-button :loading="sseSubmitting" @click="handleSSESubmit" style="width: 120px">{{ sseSubmitting ? "题目生成中" : "实时生成" }}</a-button>
+          </a-space>
         </a-form-item>
       </a-form>
     </div>
@@ -34,9 +37,16 @@ import { reactive, ref } from "vue";
 import { generatorQuestionByAiUsingPost } from "@/api/questionController";
 import message from "@arco-design/web-vue/es/message";
 
+const visible = ref(false);
+const submitting = ref(false);
+const sseSubmitting = ref(false);
+
 interface Props {
   appId: string;
   onSuccess?: (result: API.QuestionContentDTO[]) => void;
+  onSSESuccess?: (result: API.QuestionContentDTO) => void;
+  onSSEStart?: (event:any) => void;
+  onSSEClose?: (event:any) => void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -78,8 +88,40 @@ const handleSubmit = async () =>{
 }
 
 
-  const visible = ref(false);
-  const submitting = ref(false);
+/**
+ * 提交（实时生成）
+ */
+const handleSSESubmit = async () =>{
+  if(!props.appId){
+    return;
+  }
+  sseSubmitting.value = true;
+  // 创建 SSE 请求
+  const eventSource = new EventSource(
+    `http://localhost:8101/api/question/ai_generate/sse?appId=${props.appId}&questionNumber=${form.questionNumber}&optionNumber=${form.optionNumber}`
+  )
+  let first = true;
+  // 接收消息
+  eventSource.onmessage = function(event){
+    if(first){
+      props.onSSEStart?.(event)
+      handleCancel()
+      first = !first
+    }
+    // console.log(event.data)
+    props.onSSESuccess?.(JSON.parse(event.data))
+  }
+  // 报错或连接关闭时触发
+  eventSource.onerror = function(event){
+    if(event.eventPhase === EventSource.CLOSED){
+      console.log("SSE 正常关闭连接")
+      eventSource.close()
+      props.onSSEClose?.(event)
+    }
+  }
+  sseSubmitting.value = false;
+}
+
 
   const handleClick = () => {
     visible.value = true;
