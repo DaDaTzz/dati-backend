@@ -1,5 +1,6 @@
 package com.da.dati.controller;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.da.dati.annotation.AuthCheck;
@@ -20,16 +21,21 @@ import com.da.dati.model.vo.QuestionVO;
 import com.da.dati.service.AppService;
 import com.da.dati.service.QuestionService;
 import com.da.dati.service.UserService;
+import com.zhipu.oapi.service.v4.model.ModelData;
+import io.reactivex.Flowable;
+import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
-import springfox.documentation.spring.web.json.Json;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 题目接口
@@ -276,14 +282,17 @@ public class QuestionController {
             "4.返回的题目列表格式必须为JSON 数组";
 
 
+    /**
+     * AI 生成题目
+     * @param aiGeneratorQuestionRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/ai_generate")
-        public BaseResponse<List<QuestionContentDTO>> generatorQuestionByAi(@RequestBody AiGeneratorQuestionRequest aiGeneratorQuestionRequest, HttpServletRequest request) {
+        public BaseResponse<List<QuestionContentDTO>> generatorQuestionByAi(@RequestBody AiGeneratorQuestionRequest aiGeneratorQuestionRequest) {
         if (aiGeneratorQuestionRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        // 是否登录
-        User loginUser = userService.getLoginUser(request);
-        ThrowUtils.throwIf(loginUser == null, ErrorCode.NOT_LOGIN_ERROR);
         // 参数校验
         String appId = aiGeneratorQuestionRequest.getAppId();
         int questionNumber = aiGeneratorQuestionRequest.getQuestionNumber();
@@ -293,24 +302,97 @@ public class QuestionController {
         App app = appService.getById(appId);
         ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
         // 封装 Prompt
-        String appName = app.getAppName();
-        String appDesc = app.getAppDesc();
-        Integer appType = app.getAppType();
-        StringBuilder userMessage = new StringBuilder();
-        userMessage.append(appName).append("\n");;
-        userMessage.append(appDesc).append("\n");;
-        userMessage.append(AppTypeEnum.getEnumByValue(appType).getText() + "类").append("\n");
-        userMessage.append(questionNumber).append("\n");
-        userMessage.append(optionNumber).append("\n");
+        String userMessage = getUserMessage(app, questionNumber, optionNumber);
         // 调用 AI 接口
-        String result = aiManager.doAsyncRequest(GENERATE_QUESTION_SYSTEM_MESSAGE, userMessage.toString());
-        System.out.println(result);
+        String result = aiManager.doAsyncRequest(GENERATE_QUESTION_SYSTEM_MESSAGE, userMessage);
         int startIndex = result.indexOf("[");
         int endIndex = result.lastIndexOf("]");
         result = result.substring(startIndex, endIndex + 1);
         List<QuestionContentDTO> questionContentDTOS = JSONUtil.toList(result, QuestionContentDTO.class);
         return ResultUtils.success(questionContentDTOS);
     }
+
+    /**
+     * 封装 Prompt
+     * @param app
+     * @param questionNumber
+     * @param optionNumber
+     * @return
+     */
+    private static @NotNull String getUserMessage(App app, int questionNumber, int optionNumber) {
+        String appName = app.getAppName();
+        String appDesc = app.getAppDesc();
+        Integer appType = app.getAppType();
+        StringBuilder userMessage = new StringBuilder();
+        userMessage.append(appName).append("\n");
+        userMessage.append(appDesc).append("\n");
+        userMessage.append(AppTypeEnum.getEnumByValue(appType).getText() + "类").append("\n");
+        userMessage.append(questionNumber).append("\n");
+        userMessage.append(optionNumber).append("\n");
+        return userMessage.toString();
+    }
+
+    @GetMapping("/ai_generate/sse")
+    public SseEmitter generatorQuestionByAiSSE(AiGeneratorQuestionRequest aiGeneratorQuestionRequest) {
+        if (aiGeneratorQuestionRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        // 参数校验
+        String appId = aiGeneratorQuestionRequest.getAppId();
+        int questionNumber = aiGeneratorQuestionRequest.getQuestionNumber();
+        int optionNumber = aiGeneratorQuestionRequest.getOptionNumber();
+        ThrowUtils.throwIf(StringUtils.isBlank(appId) || questionNumber <= 0 || questionNumber > 100 || optionNumber <= 0 || optionNumber > 20, ErrorCode.PARAMS_ERROR);
+        // 获取应用信息
+        App app = appService.getById(appId);
+        ThrowUtils.throwIf(app == null, ErrorCode.NOT_FOUND_ERROR, "应用不存在");
+        // 封装 Prompt
+        String userMessage = getUserMessage(app, questionNumber, optionNumber);
+        // 建立 SSE 连接对，0 表示永不超时
+        SseEmitter sseEmitter = new SseEmitter(0L);
+        // 调用 AI 接口
+        Flowable<ModelData> modelDataFlowable = aiManager.doStreamRequest(GENERATE_QUESTION_SYSTEM_MESSAGE, userMessage.toString());
+        // 左括号计数器，除了默认值外，当回归为 0 时，表示左括号数量等于右括号数量，可以截取
+        AtomicInteger counter = new AtomicInteger(0);
+        // 拼接完整题目
+        StringBuilder questionBuilder = new StringBuilder();
+        modelDataFlowable
+                .observeOn(Schedulers.io())
+                .map(modelData -> modelData.getChoices().get(0).getDelta().getContent())
+                .map(message -> message.replaceAll("\\s", ""))
+                .filter(StrUtil::isNotBlank)
+                .flatMap(message -> {
+                    ArrayList<Character> characterList = new ArrayList<>();
+                    for (Character c : message.toCharArray()) {
+                        characterList.add(c);
+                    }
+                    return Flowable.fromIterable(characterList);
+                })
+                .doOnNext(c -> {
+                    // 如果 是 ‘{’，计算器 + 1
+                    if(c == '{'){
+                        counter.addAndGet( 1);
+                    }
+                    if(counter.get() > 0){
+                        questionBuilder.append(c);
+                    }
+                    // 如果 是 ‘}’，计算器 - 1
+                    if(c == '}'){
+                        counter.addAndGet( -1);
+                        if(counter.get() == 0){
+                            // 可以拼接题目，并且通过 SSE 返回给前端
+                            sseEmitter.send(JSONUtil.toJsonStr(questionBuilder.toString()));
+                            // 重置，准备拼接下一题
+                            questionBuilder.setLength(0);
+                        }
+                    }
+                })
+                .doOnError((e) -> log.error("sse error", e))
+                .doOnComplete(sseEmitter::complete)
+                .subscribe();
+        return sseEmitter;
+    }
+
+
 
 
 }
