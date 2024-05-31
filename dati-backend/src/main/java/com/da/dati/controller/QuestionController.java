@@ -285,7 +285,6 @@ public class QuestionController {
     /**
      * AI 生成题目
      * @param aiGeneratorQuestionRequest
-     * @param request
      * @return
      */
     @PostMapping("/ai_generate")

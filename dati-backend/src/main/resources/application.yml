@@ -25,13 +25,46 @@ spring:
     username: root
     password: 123456
   # Redis 配置
-  # todo 需替换配置，然后取消注释
-#  redis:
-#    database: 1
-#    host: localhost
-#    port: 6379
-#    timeout: 5000
+  redis:
+    database: 1
+    host: localhost
+    port: 6379
+    timeout: 5000
 #    password: 123456
+
+  shardingsphere:
+    # 是否开启
+    datasource:
+      # 数据源（逻辑名字）
+      names: dati
+      # 配置数据源
+      dati:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/dati?useSSL=false&autoReconnect=true&characterEncoding=UTF-8&serverTimezone=UTC
+        username: root
+        password: 123456
+    # 分片的配置
+    rules:
+      sharding:
+        # 表的分片策略
+        sharding-algorithms:
+          answer-table-inline:
+            type: INLINE
+            props:
+              algorithm-expression: user_answer_$->{appId % 2}
+        tables:
+          # 逻辑表的名称
+          user_answer:
+            # 数据节点配置，采用Groovy表达式
+            actual-data-nodes: dati.user_answer_$->{0..1}
+            # 配置策略
+            table-strategy:
+              # 用于单分片键的标准分片场景
+              standard:
+                sharding-column: appId
+                # 分片算法名字
+                sharding-algorithm-name: answer-table-inline
 
   # 文件上传
   servlet:
