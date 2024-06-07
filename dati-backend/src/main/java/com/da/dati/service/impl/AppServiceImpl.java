@@ -4,11 +4,16 @@ import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.da.dati.common.BaseResponse;
 import com.da.dati.common.ErrorCode;
+import com.da.dati.common.ResultUtils;
 import com.da.dati.constant.CommonConstant;
 import com.da.dati.exception.ThrowUtils;
 import com.da.dati.mapper.AppMapper;
+import com.da.dati.mapper.UserAnswerMapper;
 import com.da.dati.model.dto.app.AppQueryRequest;
+import com.da.dati.model.dto.statistic.AppAnswerCountDTO;
+import com.da.dati.model.dto.statistic.AppAnswerResultCountDTO;
 import com.da.dati.model.entity.App;
 import com.da.dati.model.entity.User;
 import com.da.dati.model.enums.AppScoringStrategyEnum;
@@ -23,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -41,6 +47,10 @@ public class AppServiceImpl extends ServiceImpl<AppMapper, App> implements AppSe
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private UserAnswerMapper userAnswerMapper;
+
 
     /**
      * 校验数据

@@ -23,6 +23,7 @@ import com.da.dati.service.QuestionService;
 import com.da.dati.service.UserService;
 import com.zhipu.oapi.service.v4.model.ModelData;
 import io.reactivex.Flowable;
+import io.reactivex.Scheduler;
 import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -58,6 +59,9 @@ public class QuestionController {
 
     @Resource
     private AppService appService;
+
+    @Resource
+    private Scheduler vipScheduler;
 
 
     // region 增删改查
@@ -332,7 +336,7 @@ public class QuestionController {
     }
 
     @GetMapping("/ai_generate/sse")
-    public SseEmitter generatorQuestionByAiSSE(AiGeneratorQuestionRequest aiGeneratorQuestionRequest) {
+    public SseEmitter generatorQuestionByAiSSE(AiGeneratorQuestionRequest aiGeneratorQuestionRequest, HttpServletRequest request) {
         if (aiGeneratorQuestionRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -354,8 +358,15 @@ public class QuestionController {
         AtomicInteger counter = new AtomicInteger(0);
         // 拼接完整题目
         StringBuilder questionBuilder = new StringBuilder();
+        // 获取当前登录用户
+        User loginUser = userService.getLoginUser(request);
+        // 默认全局线程池
+        Scheduler scheduler = Schedulers.io();
+        if("vip".equals(loginUser.getUserRole())){
+            scheduler = vipScheduler;
+        }
         modelDataFlowable
-                .observeOn(Schedulers.io())
+                .observeOn(scheduler)
                 .map(modelData -> modelData.getChoices().get(0).getDelta().getContent())
                 .map(message -> message.replaceAll("\\s", ""))
                 .filter(StrUtil::isNotBlank)

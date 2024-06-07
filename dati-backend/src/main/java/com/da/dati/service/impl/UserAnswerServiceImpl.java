@@ -54,6 +54,7 @@ public class UserAnswerServiceImpl extends ServiceImpl<UserAnswerMapper, UserAns
         ThrowUtils.throwIf(userAnswer == null, ErrorCode.PARAMS_ERROR);
         // 从对象中取值
         Long appId = userAnswer.getAppId();
+        Long id = userAnswer.getId();
         String choices = userAnswer.getChoices();
         Long userId = userAnswer.getUserId();
 
@@ -62,6 +63,7 @@ public class UserAnswerServiceImpl extends ServiceImpl<UserAnswerMapper, UserAns
             // 补充校验规则
             ThrowUtils.throwIf(StringUtils.isBlank(choices), ErrorCode.PARAMS_ERROR,"用户答案为空");
             ThrowUtils.throwIf(ObjectUtils.isEmpty(appId), ErrorCode.PARAMS_ERROR,"关联应用为空");
+            ThrowUtils.throwIf(id == null || id <= 0, ErrorCode.PARAMS_ERROR,"id 非法");
         }
         // 修改数据时，有参数则校验
         //  补充校验规则

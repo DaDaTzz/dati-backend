@@ -6,10 +6,13 @@ import com.da.dati.common.*;
 import com.da.dati.constant.UserConstant;
 import com.da.dati.exception.BusinessException;
 import com.da.dati.exception.ThrowUtils;
+import com.da.dati.mapper.UserAnswerMapper;
 import com.da.dati.model.dto.app.AppAddRequest;
 import com.da.dati.model.dto.app.AppEditRequest;
 import com.da.dati.model.dto.app.AppQueryRequest;
 import com.da.dati.model.dto.app.AppUpdateRequest;
+import com.da.dati.model.dto.statistic.AppAnswerCountDTO;
+import com.da.dati.model.dto.statistic.AppAnswerResultCountDTO;
 import com.da.dati.model.entity.App;
 import com.da.dati.model.entity.User;
 import com.da.dati.model.enums.ReviewStatusEnum;
@@ -23,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 应用接口
@@ -40,6 +44,7 @@ public class AppController {
 
     @Resource
     private UserService userService;
+
 
     // region 增删改查
 

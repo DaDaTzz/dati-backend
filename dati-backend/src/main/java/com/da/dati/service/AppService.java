@@ -4,10 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.da.dati.model.dto.app.AppQueryRequest;
+import com.da.dati.model.dto.statistic.AppAnswerCountDTO;
+import com.da.dati.model.dto.statistic.AppAnswerResultCountDTO;
 import com.da.dati.model.entity.App;
 import com.da.dati.model.vo.AppVO;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
  * 应用服务

@@ -242,6 +242,12 @@ declare namespace API {
     id?: number;
   };
 
+  type generatorQuestionByAiSSEUsingGETParams = {
+    appId?: string;
+    optionNumber?: number;
+    questionNumber?: number;
+  };
+
   type getAppVOByIdUsingGETParams = {
     /** id */
     id?: number;
@@ -666,6 +672,10 @@ declare namespace API {
     updateTime?: string;
     user?: UserVO;
     userId?: number;
+  };
+
+  type SseEmitter = {
+    timeout?: number;
   };
 
   type uploadFileUsingPOSTParams = {

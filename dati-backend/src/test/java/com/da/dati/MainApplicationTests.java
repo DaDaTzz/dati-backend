@@ -3,12 +3,15 @@ package com.da.dati;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.da.dati.manager.AiManager;
+import com.da.dati.mapper.UserAnswerMapper;
+import com.da.dati.model.dto.statistic.AppAnswerCountDTO;
 import com.da.dati.model.entity.UserAnswer;
 import com.da.dati.service.UserAnswerService;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 主类测试
@@ -21,6 +24,8 @@ class MainApplicationTests {
 
     @Resource
     private AiManager aiManager;
+    @Resource
+    private UserAnswerMapper userAnswerMapper;
 
 
 
@@ -51,5 +56,12 @@ class MainApplicationTests {
         UserAnswer userAnswerTwo = userAnswerService.getOne(Wrappers.lambdaQuery(UserAnswer.class).eq(UserAnswer::getAppId, 2L));
         System.out.println(JSONUtil.toJsonStr(userAnswerTwo));
 
+    }
+
+    @Test
+    void test1(){
+        List<AppAnswerCountDTO> appAnswerCountDTOS = userAnswerMapper.doAppAnswerCount();
+        System.out.println(appAnswerCountDTOS);
+        System.out.println(userAnswerMapper.doAppAnswerResultCount(1L));
     }
 }
